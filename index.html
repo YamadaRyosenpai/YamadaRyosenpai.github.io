@@ -89,7 +89,7 @@
         
   
     <h1 itemprop="name">
-      <a class="p-name article-title" href="/2025/11/26/Second_BE/">【硬核实战】从零手写：基于 C++、Docker 和 MySQL 的高并发公网聊天室 &amp; Python 数据采集</a>
+      <a class="p-name article-title" href="/2025/11/26/Second_BE/">【DAY2】从零手写：基于 C++、Docker 和 MySQL 的高并发公网聊天室 &amp; Python 数据采集</a>
     </h1>
   
 
@@ -203,7 +203,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2025/11/26/Second_BE/" data-id="cuidny_yAwKpOoU8VM8FVSmyP" data-title="【硬核实战】从零手写：基于 C++、Docker 和 MySQL 的高并发公网聊天室 &amp; Python 数据采集" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2025/11/26/Second_BE/" data-id="cuid7RkC4sNgNMZIfaJ4OcSzz" data-title="【DAY2】从零手写：基于 C++、Docker 和 MySQL 的高并发公网聊天室 &amp; Python 数据采集" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -235,7 +235,7 @@
         
   
     <h1 itemprop="name">
-      <a class="p-name article-title" href="/2025/11/25/Frist_BE/">从零搭建：我的第一个 Linux C++ 公网聊天室 （这是一个测试，作为一个学习记录）</a>
+      <a class="p-name article-title" href="/2025/11/25/Frist_BE/">【DAY1】从零搭建：我的第一个 Linux C++ 公网聊天室 （这是一个测试，作为一个学习记录）</a>
     </h1>
   
 
@@ -250,13 +250,13 @@
 <h2 id="2-核心代码：多线程与-Socket"><a href="#2-核心代码：多线程与-Socket" class="headerlink" title="2. 核心代码：多线程与 Socket"></a>2. 核心代码：多线程与 Socket</h2><p>为了让服务器能同时处理多个人的消息，我使用了 <code>std::thread</code>。</p>
 <p>核心逻辑如下：<br>```cpp<br>&#x2F;&#x2F; 简单的广播逻辑<br>void broadcast_message(string message, int sender_fd) {<br>    lock_guard<mutex> lock(clients_mtx); &#x2F;&#x2F; 加锁防止冲突<br>    for (int client_fd : all_clients) {<br>        send(client_fd, message.c_str(), message.length(), 0);<br>    }<br>}<br>```</p>
 <h2 id="3-数据持久化：接入-MySQL"><a href="#3-数据持久化：接入-MySQL" class="headerlink" title="3. 数据持久化：接入 MySQL"></a>3. 数据持久化：接入 MySQL</h2><p>聊天记录不能发完就丢。我设计了一张 <code>messages</code> 表来存储记录。<br>遇到的难点是 C++ 连接 MySQL 需要安装 <code>libmysqlclient-dev</code>，并且编译时要加上链接库参数。</p>
-<h2 id="4-公网穿透：让手机连上电脑"><a href="#4-公网穿透：让手机连上电脑" class="headerlink" title="4. 公网穿透：让手机连上电脑"></a>4. 公网穿透：让手机连上电脑</h2><p>因为没有公网 IP，我使用了 <strong>Pinggy</strong>。<br>只需要一条命令就能把本地 8888 端口暴露给公网：<br>```bash<br>ssh -p 443 -R0:localhost:8888 <a href="mailto:&#x74;&#x63;&#112;&#64;&#x61;&#x2e;&#x70;&#105;&#110;&#103;&#x67;&#121;&#46;&#x69;&#x6f;">tcp@a.pinggy.io</a><br>```</p>
+<h2 id="4-公网穿透：让手机连上电脑"><a href="#4-公网穿透：让手机连上电脑" class="headerlink" title="4. 公网穿透：让手机连上电脑"></a>4. 公网穿透：让手机连上电脑</h2><p>因为没有公网 IP，我使用了 <strong>Pinggy</strong>。<br>只需要一条命令就能把本地 8888 端口暴露给公网：<br>```bash<br>ssh -p 443 -R0:localhost:8888 <a href="mailto:&#116;&#99;&#x70;&#64;&#97;&#46;&#x70;&#105;&#x6e;&#x67;&#x67;&#121;&#x2e;&#105;&#x6f;">tcp@a.pinggy.io</a><br>```</p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过这个项目，我理解了 TCP 粘包、多线程竞争以及数据库连接的基本原理。下一步我计划实现数据库连接池，进一步提升性能。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2025/11/25/Frist_BE/" data-id="cuidFD3Ehrjot-ZOQb0ay6xKf" data-title="从零搭建：我的第一个 Linux C++ 公网聊天室 （这是一个测试，作为一个学习记录）" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2025/11/25/Frist_BE/" data-id="cuidaxII4p1HuvQejgnxKymGq" data-title="【DAY1】从零搭建：我的第一个 Linux C++ 公网聊天室 （这是一个测试，作为一个学习记录）" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -322,11 +322,11 @@
       <ul>
         
           <li>
-            <a href="/2025/11/26/Second_BE/">【硬核实战】从零手写：基于 C++、Docker 和 MySQL 的高并发公网聊天室 &amp; Python 数据采集</a>
+            <a href="/2025/11/26/Second_BE/">【DAY2】从零手写：基于 C++、Docker 和 MySQL 的高并发公网聊天室 &amp; Python 数据采集</a>
           </li>
         
           <li>
-            <a href="/2025/11/25/Frist_BE/">从零搭建：我的第一个 Linux C++ 公网聊天室 （这是一个测试，作为一个学习记录）</a>
+            <a href="/2025/11/25/Frist_BE/">【DAY1】从零搭建：我的第一个 Linux C++ 公网聊天室 （这是一个测试，作为一个学习记录）</a>
           </li>
         
       </ul>
