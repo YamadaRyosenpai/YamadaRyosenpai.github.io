@@ -71,6 +71,111 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-Third_BE" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2025/11/27/Third_BE/" class="article-date">
+  <time class="dt-published" datetime="2025-11-27T15:00:00.000Z" itemprop="datePublished">2025-11-27</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E5%BC%80%E5%8F%91%E6%97%A5%E5%BF%97/">开发日志</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2025/11/27/Third_BE/">【DYA3】C++聊天室：Redis缓存层实现与架构优化</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="📅-今日里程碑：引入-Redis-高速缓存"><a href="#📅-今日里程碑：引入-Redis-高速缓存" class="headerlink" title="📅 今日里程碑：引入 Redis 高速缓存"></a>📅 今日里程碑：引入 Redis 高速缓存</h2><p>为了解决 MySQL 在高并发下的读写瓶颈，以及提升用户登录时的历史消息加载速度，今天我正式引入了 <strong>Redis</strong> 作为缓存层。</p>
+<p>现在的系统架构已经升级为： <strong>客户端 (Qt&#x2F;Python)</strong> &lt;–&gt; <strong>C++ 服务端</strong> &lt;–&gt; <strong>Redis (热数据)</strong> + <strong>MySQL (持久化)</strong></p>
+<h2 id="🛠️-核心技术实现"><a href="#🛠️-核心技术实现" class="headerlink" title="🛠️ 核心技术实现"></a>🛠️ 核心技术实现</h2><h3 id="1-双写策略-Write-Through-变种"><a href="#1-双写策略-Write-Through-变种" class="headerlink" title="1. 双写策略 (Write-Through 变种)"></a>1. 双写策略 (Write-Through 变种)</h3><p>每当服务端收到一条新消息时，会同时进行两个操作：</p>
+<ul>
+<li><p><strong>写入 MySQL</strong>：保证数据绝对不丢失（持久化）。</p>
+</li>
+<li><p><strong>写入 Redis List</strong>：使用 <code>LPUSH</code> 命令塞入 <code>chat_history</code> 列表头部，并使用 <code>LTRIM</code> 保持列表长度为 20，确保内存中只存最新的热点数据。</p>
+</li>
+</ul>
+<h3 id="2-读写分离与降级"><a href="#2-读写分离与降级" class="headerlink" title="2. 读写分离与降级"></a>2. 读写分离与降级</h3><p>用户登录获取历史记录时：</p>
+<ul>
+<li><p><strong>优先读 Redis</strong>：使用 <code>LRANGE</code> 全量取出内存中的 20 条记录，速度极快（微秒级）。加入能读写图片的能力。</p>
+</li>
+<li><p><strong>降级方案</strong>：如果 Redis 挂了或者没数据，自动降级去查 MySQL，保证服务可用性。</p>
+</li>
+</ul>
+<h3 id="3-大文件策略优化"><a href="#3-大文件策略优化" class="headerlink" title="3. 大文件策略优化"></a>3. 大文件策略优化</h3><p>在处理图片消息时，为了防止 Base64 编码的大图阻塞网络或撑爆客户端内存，我在服务端增加了智能判断：</p>
+<ul>
+<li><p><strong>实时转发</strong>：大图依然可以实时发送，保证聊天体验。</p>
+</li>
+<li><p><strong>历史回放</strong>：超过 <strong>2MB</strong> 的图片在历史记录中会被替换为 <code>[历史图片]</code> 提示文本，极大提升了登录速度。</p>
+</li>
+</ul>
+<h2 id="💻-当前代码状态-Server-cpp"><a href="#💻-当前代码状态-Server-cpp" class="headerlink" title="💻 当前代码状态 (Server.cpp)"></a>💻 当前代码状态 (Server.cpp)</h2><p>目前服务端 (<code>server.cpp</code>) 已经集成了以下库：</p>
+<ul>
+<li><p><code>&lt;mysql/mysql.h&gt;</code>: MySQL C API</p>
+</li>
+<li><p><code>&lt;hiredis/hiredis.h&gt;</code>: Redis C API</p>
+</li>
+<li><p><code>&lt;nlohmann/json.hpp&gt;</code>: JSON 序列化</p>
+</li>
+<li><p><code>&lt;thread&gt;, &lt;mutex&gt;</code>: 多线程并发</p>
+</li>
+</ul>
+<p><strong>编译命令备忘：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">g++ -pthread server.cpp -o my_chat $(mysql_config --cflags --libs) -lhiredis</span><br></pre></td></tr></table></figure>
+
+<h2 id="📋-明日待办清单-To-Do"><a href="#📋-明日待办清单-To-Do" class="headerlink" title="📋 明日待办清单 (To-Do)"></a>📋 明日待办清单 (To-Do)</h2><p>虽然基础设施已经很完善了，但为了让聊天室更具“现代感”，明天的重点是 <strong>微服务扩展</strong>。</p>
+<ol>
+<li><p><strong>Python AI 机器人客户端</strong></p>
+<ul>
+<li><p>编写一个独立的 Python 脚本 (<code>ai_client.py</code>)。</p>
+</li>
+<li><p>利用 <code>socket</code> 连接 C++ 服务器，监听群消息。</p>
+</li>
+<li><p>接入 <strong>DeepSeek API</strong>，实现 <code>@AI</code> 智能问答功能。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>架构验证</strong></p>
+<ul>
+<li><p>同时运行：C++ 服务端 + Redis + MySQL + Qt 客户端 + Python AI 机器人。</p>
+</li>
+<li><p>测试多方联动效果。</p>
+</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p><strong>总结</strong>：今天的 Redis 集成让系统的响应速度有了质的飞跃。也用上Qt来省略终端用nc。明天整个ai来玩玩<br>之后了解一下io多路复用，写出来之后好好了解一下原理</p>
+</blockquote>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2025/11/27/Third_BE/" data-id="cuidFVx0DZLXnVPKuYUBs00at" data-title="【DYA3】C++聊天室：Redis缓存层实现与架构优化" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C/" rel="tag">C++</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis/" rel="tag">Redis</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" rel="tag">性能优化</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/" rel="tag">架构设计</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-Second_BE" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2025/11/26/Second_BE/" class="article-date">
@@ -203,7 +308,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2025/11/26/Second_BE/" data-id="cuid7RkC4sNgNMZIfaJ4OcSzz" data-title="【DAY2】从零手写：基于 C++、Docker 和 MySQL 的高并发公网聊天室 &amp; Python 数据采集" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2025/11/26/Second_BE/" data-id="cuid_bNfkTIZEZVIqi5awQ-h3" data-title="【DAY2】从零手写：基于 C++、Docker 和 MySQL 的高并发公网聊天室 &amp; Python 数据采集" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -250,13 +355,13 @@
 <h2 id="2-核心代码：多线程与-Socket"><a href="#2-核心代码：多线程与-Socket" class="headerlink" title="2. 核心代码：多线程与 Socket"></a>2. 核心代码：多线程与 Socket</h2><p>为了让服务器能同时处理多个人的消息，我使用了 <code>std::thread</code>。</p>
 <p>核心逻辑如下：<br>```cpp<br>&#x2F;&#x2F; 简单的广播逻辑<br>void broadcast_message(string message, int sender_fd) {<br>    lock_guard<mutex> lock(clients_mtx); &#x2F;&#x2F; 加锁防止冲突<br>    for (int client_fd : all_clients) {<br>        send(client_fd, message.c_str(), message.length(), 0);<br>    }<br>}<br>```</p>
 <h2 id="3-数据持久化：接入-MySQL"><a href="#3-数据持久化：接入-MySQL" class="headerlink" title="3. 数据持久化：接入 MySQL"></a>3. 数据持久化：接入 MySQL</h2><p>聊天记录不能发完就丢。我设计了一张 <code>messages</code> 表来存储记录。<br>遇到的难点是 C++ 连接 MySQL 需要安装 <code>libmysqlclient-dev</code>，并且编译时要加上链接库参数。</p>
-<h2 id="4-公网穿透：让手机连上电脑"><a href="#4-公网穿透：让手机连上电脑" class="headerlink" title="4. 公网穿透：让手机连上电脑"></a>4. 公网穿透：让手机连上电脑</h2><p>因为没有公网 IP，我使用了 <strong>Pinggy</strong>。<br>只需要一条命令就能把本地 8888 端口暴露给公网：<br>```bash<br>ssh -p 443 -R0:localhost:8888 <a href="mailto:&#116;&#99;&#x70;&#64;&#97;&#46;&#x70;&#105;&#x6e;&#x67;&#x67;&#121;&#x2e;&#105;&#x6f;">tcp@a.pinggy.io</a><br>```</p>
+<h2 id="4-公网穿透：让手机连上电脑"><a href="#4-公网穿透：让手机连上电脑" class="headerlink" title="4. 公网穿透：让手机连上电脑"></a>4. 公网穿透：让手机连上电脑</h2><p>因为没有公网 IP，我使用了 <strong>Pinggy</strong>。<br>只需要一条命令就能把本地 8888 端口暴露给公网：<br>```bash<br>ssh -p 443 -R0:localhost:8888 <a href="mailto:&#116;&#x63;&#112;&#64;&#97;&#46;&#112;&#x69;&#110;&#x67;&#x67;&#121;&#46;&#105;&#111;">tcp@a.pinggy.io</a><br>```</p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过这个项目，我理解了 TCP 粘包、多线程竞争以及数据库连接的基本原理。下一步我计划实现数据库连接池，进一步提升性能。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2025/11/25/Frist_BE/" data-id="cuidaxII4p1HuvQejgnxKymGq" data-title="【DAY1】从零搭建：我的第一个 Linux C++ 公网聊天室 （这是一个测试，作为一个学习记录）" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2025/11/25/Frist_BE/" data-id="cuidx1PmiF0bAJm2kp-h7zpib" data-title="【DAY1】从零搭建：我的第一个 Linux C++ 公网聊天室 （这是一个测试，作为一个学习记录）" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -280,7 +385,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%8A%80%E6%9C%AF%E5%AE%9E%E6%88%98/">技术实战</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%A4%8D%E7%9B%98/">项目复盘</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%BC%80%E5%8F%91%E6%97%A5%E5%BF%97/">开发日志</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%8A%80%E6%9C%AF%E5%AE%9E%E6%88%98/">技术实战</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%A4%8D%E7%9B%98/">项目复盘</a></li></ul>
     </div>
   </div>
 
@@ -290,7 +395,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/C/" rel="tag">C++</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Linux/" rel="tag">Linux</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/WSL/" rel="tag">WSL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/" rel="tag">后端开发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%88%AC%E8%99%AB/" rel="tag">爬虫</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/" rel="tag">网络编程</a></li></ul>
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/C/" rel="tag">C++</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Linux/" rel="tag">Linux</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/" rel="tag">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/WSL/" rel="tag">WSL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/" rel="tag">后端开发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" rel="tag">性能优化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/" rel="tag">架构设计</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%88%AC%E8%99%AB/" rel="tag">爬虫</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/" rel="tag">网络编程</a></li></ul>
     </div>
   </div>
 
@@ -300,7 +405,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/C/" style="font-size: 20px;">C++</a> <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/Linux/" style="font-size: 20px;">Linux</a> <a href="/tags/MySQL/" style="font-size: 20px;">MySQL</a> <a href="/tags/Python/" style="font-size: 10px;">Python</a> <a href="/tags/WSL/" style="font-size: 20px;">WSL</a> <a href="/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/" style="font-size: 10px;">后端开发</a> <a href="/tags/%E7%88%AC%E8%99%AB/" style="font-size: 10px;">爬虫</a> <a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/" style="font-size: 10px;">网络编程</a>
+      <a href="/tags/C/" style="font-size: 20px;">C++</a> <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/Linux/" style="font-size: 15px;">Linux</a> <a href="/tags/MySQL/" style="font-size: 20px;">MySQL</a> <a href="/tags/Python/" style="font-size: 10px;">Python</a> <a href="/tags/Redis/" style="font-size: 10px;">Redis</a> <a href="/tags/WSL/" style="font-size: 15px;">WSL</a> <a href="/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/" style="font-size: 10px;">后端开发</a> <a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" style="font-size: 10px;">性能优化</a> <a href="/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/" style="font-size: 10px;">架构设计</a> <a href="/tags/%E7%88%AC%E8%99%AB/" style="font-size: 10px;">爬虫</a> <a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/" style="font-size: 10px;">网络编程</a>
     </div>
   </div>
 
@@ -320,6 +425,10 @@
     <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2025/11/27/Third_BE/">【DYA3】C++聊天室：Redis缓存层实现与架构优化</a>
+          </li>
         
           <li>
             <a href="/2025/11/26/Second_BE/">【DAY2】从零手写：基于 C++、Docker 和 MySQL 的高并发公网聊天室 &amp; Python 数据采集</a>
