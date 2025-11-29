@@ -97,9 +97,9 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h2 id="📅-今日概览"><a href="#📅-今日概览" class="headerlink" title="📅 今日概览"></a>📅 今日概览</h2><p>如果说前两天是在打地基（Socket, Epoll, MySQL, Redis），那么今天就是“装修入住”的高光时刻。<br>我彻底重构了客户端，抛弃了简陋的命令行，用 <strong>Qt</strong> 写出了一个支持 <strong>群聊&#x2F;私聊分组、图片发送、好友管理</strong> 的现代化 IM 界面。同时，我还通过 Python 微服务的方式，无缝接入了 <strong>DeepSeek AI</strong>，让聊天室拥有了一个 24 小时在线的智能陪聊。</p>
+        <h2 id="今日概览"><a href="#今日概览" class="headerlink" title="今日概览"></a>今日概览</h2><p>如果说前两天是在打地基（Socket, Epoll, MySQL, Redis），那么今天就是“装修入住”的高光时刻。<br>我彻底重构了客户端，抛弃了简陋的命令行，用 <strong>Qt</strong> 写出了一个支持 <strong>群聊&#x2F;私聊分组、图片发送、好友管理</strong> 的现代化 IM 界面。同时，我还通过 Python 微服务的方式，无缝接入了 <strong>DeepSeek AI</strong>，让聊天室拥有了一个 24 小时在线的智能陪聊。</p>
 <hr>
-<h2 id="🖥️-1-Qt-客户端重构：像-QQ-一样聊天"><a href="#🖥️-1-Qt-客户端重构：像-QQ-一样聊天" class="headerlink" title="🖥️ 1. Qt 客户端重构：像 QQ 一样聊天"></a>🖥️ 1. Qt 客户端重构：像 QQ 一样聊天</h2><p>为了实现“私聊”和“群聊”的分离，我对 UI 进行了修改。</p>
+<h2 id="1-Qt-客户端重构：像-QQ-一样聊天"><a href="#1-Qt-客户端重构：像-QQ-一样聊天" class="headerlink" title="1. Qt 客户端重构：像 QQ 一样聊天"></a>1. Qt 客户端重构：像 QQ 一样聊天</h2><p>为了实现“私聊”和“群聊”的分离，我对 UI 进行了修改。</p>
 <h3 id="核心架构升级"><a href="#核心架构升级" class="headerlink" title="核心架构升级"></a>核心架构升级</h3><ul>
 <li><strong>列表控件升级</strong>：从简单的 <code>QListWidget</code> 升级为 <strong><code>QTreeWidget</code></strong>，实现了“我的群组”和“私聊好友”的折叠分组显示。</li>
 <li><strong>数据驱动 UI</strong>：利用 <code>QTreeWidgetItem::setData(Qt::UserRole, ...)</code> 存储元数据（如 Socket ID、聊天类型），实现了点击列表项自动切换聊天上下文。</li>
@@ -124,7 +124,7 @@
 <li><strong>图标资源报错</strong>：Qt 6 中没有 <code>SP_UserIcon</code>，改用 <code>SP_ComputerIcon</code> 暂时替代。</li>
 </ul>
 <hr>
-<h2 id="🧠-2-AI-接入：Python-微服务架构"><a href="#🧠-2-AI-接入：Python-微服务架构" class="headerlink" title="🧠 2. AI 接入：Python 微服务架构"></a>🧠 2. AI 接入：Python 微服务架构</h2><p>为了让聊天室更有趣，我没有在 C++ 服务端里死磕 HTTP 库，而是采用 <strong>微服务</strong> 的思路，写了一个独立的 Python 脚本作为 AI 机器人。</p>
+<h2 id="2-AI-接入：Python-微服务架构"><a href="#2-AI-接入：Python-微服务架构" class="headerlink" title="2. AI 接入：Python 微服务架构"></a>2. AI 接入：Python 微服务架构</h2><p>为了让聊天室更有趣，我没有在 C++ 服务端里死磕 HTTP 库，而是采用 <strong>微服务</strong> 的思路，写了一个独立的 Python 脚本作为 AI 机器人。</p>
 <h3 id="架构设计"><a href="#架构设计" class="headerlink" title="架构设计"></a>架构设计</h3><ul>
 <li><strong>独立进程</strong>：<code>ai_bot.py</code> 作为一个普通的 TCP 客户端连接 C++ 服务器。</li>
 <li><strong>监听与触发</strong>：机器人监听所有群消息，当检测到 <strong><code>@AI</code></strong> 关键词时触发逻辑。</li>
@@ -132,7 +132,7 @@
 </ul>
 <h3 id="代码思考"><a href="#代码思考" class="headerlink" title="代码思考"></a>代码思考</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 异步思考，不阻塞消息接收</span></span><br><span class="line">t = threading.Thread(target=<span class="variable language_">self</span>.call_deepseek_api, args=(sender, question))</span><br><span class="line">t.start()</span><br></pre></td></tr></table></figure>
 <p>这种设计使得 AI 在思考（网络请求）时，机器人依然能接收并处理其他人的消息，实现了高并发处理。</p>
-<h2 id="⚙️-3-服务端逻辑完善-Epoll-业务逻辑"><a href="#⚙️-3-服务端逻辑完善-Epoll-业务逻辑" class="headerlink" title="⚙️ 3. 服务端逻辑完善 (Epoll + 业务逻辑)"></a>⚙️ 3. 服务端逻辑完善 (Epoll + 业务逻辑)</h2><p>服务端 (<code>server_epoll.cpp</code>) 是整个系统的调度中心，今天主要完善了业务分发逻辑。</p>
+<h2 id="3-服务端逻辑完善-Epoll-业务逻辑"><a href="#3-服务端逻辑完善-Epoll-业务逻辑" class="headerlink" title="3. 服务端逻辑完善 (Epoll + 业务逻辑)"></a>3. 服务端逻辑完善 (Epoll + 业务逻辑)</h2><p>服务端 (<code>server_epoll.cpp</code>) 是整个系统的调度中心，今天主要完善了业务分发逻辑。</p>
 <ul>
 <li><p><strong>协议扩展</strong>：新增了 <code>create_group</code> (建群), <code>join_group</code> (加群), <code>private_msg</code> (私聊) 等指令的处理。</p>
 </li>
@@ -142,7 +142,7 @@
 </li>
 </ul>
 <hr>
-<h2 id="🐛-4-环境与调试踩坑"><a href="#🐛-4-环境与调试踩坑" class="headerlink" title="🐛 4. 环境与调试踩坑"></a>🐛 4. 环境与调试踩坑</h2><p>今天的开发中也遇到了一些“经典的”环境问题：</p>
+<h2 id="4-环境与调试踩坑"><a href="#4-环境与调试踩坑" class="headerlink" title="4. 环境与调试踩坑"></a>4. 环境与调试踩坑</h2><p>今天的开发中也遇到了一些经典的环境问题：</p>
 <ol>
 <li><p><strong>WSL 连接拒绝 (<code>WinError 10061</code>)</strong>：</p>
 <ul>
@@ -170,7 +170,7 @@
 </li>
 </ol>
 <hr>
-<h2 id="📝-总结"><a href="#📝-总结" class="headerlink" title="📝 总结"></a>📝 总结</h2><p>现在的聊天室已经具备了 <strong>工业级 IM 软件</strong> 的雏形：</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>现在的聊天室已经具备了 <strong>工业级 IM 软件</strong> 的雏形：</p>
 <ul>
 <li><p><strong>后端</strong>：Epoll 高并发 + Redis 缓存 + MySQL 持久化。</p>
 </li>
@@ -186,7 +186,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2025/11/28/Fourth_BE/" data-id="cuidBgShIiyg0mNUrWaqE5zJD" data-title="【实战Day4】C++聊天室进化：Qt GUI 重构、群聊私聊分离与 AI 深度集成" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2025/11/28/Fourth_BE/" data-id="cuidvWrPLGEccV4JrCmtM9hbB" data-title="【实战Day4】C++聊天室进化：Qt GUI 重构、群聊私聊分离与 AI 深度集成" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -291,7 +291,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2025/11/27/Third_BE/" data-id="cuidtaNfBsyd0eS03pjvc9D_U" data-title="【DYA3】C++聊天室：Redis缓存层实现与架构优化" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2025/11/27/Third_BE/" data-id="cuid_YfvRksko2zXYYgTBDihC" data-title="【DYA3】C++聊天室：Redis缓存层实现与架构优化" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -437,7 +437,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2025/11/26/Second_BE/" data-id="cuidvWvqZSsk8_A5XjZpB1CUO" data-title="【DAY2】从零手写：基于 C++、Docker 和 MySQL 的高并发公网聊天室 &amp; Python 数据采集" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2025/11/26/Second_BE/" data-id="cuidT_w0oPX_yO-1rtsl_T557" data-title="【DAY2】从零手写：基于 C++、Docker 和 MySQL 的高并发公网聊天室 &amp; Python 数据采集" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -484,13 +484,13 @@
 <h2 id="2-核心代码：多线程与-Socket"><a href="#2-核心代码：多线程与-Socket" class="headerlink" title="2. 核心代码：多线程与 Socket"></a>2. 核心代码：多线程与 Socket</h2><p>为了让服务器能同时处理多个人的消息，我使用了 <code>std::thread</code>。</p>
 <p>核心逻辑如下：<br>```cpp<br>&#x2F;&#x2F; 简单的广播逻辑<br>void broadcast_message(string message, int sender_fd) {<br>    lock_guard<mutex> lock(clients_mtx); &#x2F;&#x2F; 加锁防止冲突<br>    for (int client_fd : all_clients) {<br>        send(client_fd, message.c_str(), message.length(), 0);<br>    }<br>}<br>```</p>
 <h2 id="3-数据持久化：接入-MySQL"><a href="#3-数据持久化：接入-MySQL" class="headerlink" title="3. 数据持久化：接入 MySQL"></a>3. 数据持久化：接入 MySQL</h2><p>聊天记录不能发完就丢。我设计了一张 <code>messages</code> 表来存储记录。<br>遇到的难点是 C++ 连接 MySQL 需要安装 <code>libmysqlclient-dev</code>，并且编译时要加上链接库参数。</p>
-<h2 id="4-公网穿透：让手机连上电脑"><a href="#4-公网穿透：让手机连上电脑" class="headerlink" title="4. 公网穿透：让手机连上电脑"></a>4. 公网穿透：让手机连上电脑</h2><p>因为没有公网 IP，我使用了 <strong>Pinggy</strong>。<br>只需要一条命令就能把本地 8888 端口暴露给公网：<br>```bash<br>ssh -p 443 -R0:localhost:8888 <a href="mailto:&#x74;&#99;&#x70;&#x40;&#x61;&#46;&#x70;&#105;&#x6e;&#x67;&#x67;&#x79;&#x2e;&#105;&#111;">tcp@a.pinggy.io</a><br>```</p>
+<h2 id="4-公网穿透：让手机连上电脑"><a href="#4-公网穿透：让手机连上电脑" class="headerlink" title="4. 公网穿透：让手机连上电脑"></a>4. 公网穿透：让手机连上电脑</h2><p>因为没有公网 IP，我使用了 <strong>Pinggy</strong>。<br>只需要一条命令就能把本地 8888 端口暴露给公网：<br>```bash<br>ssh -p 443 -R0:localhost:8888 <a href="mailto:&#116;&#99;&#112;&#64;&#97;&#46;&#112;&#105;&#110;&#103;&#103;&#121;&#46;&#x69;&#x6f;">tcp@a.pinggy.io</a><br>```</p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过这个项目，我理解了 TCP 粘包、多线程竞争以及数据库连接的基本原理。下一步我计划实现数据库连接池，进一步提升性能。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2025/11/25/Frist_BE/" data-id="cuidcv5YeynMV2P8BPKp1N6OZ" data-title="【DAY1】从零搭建：我的第一个 Linux C++ 公网聊天室 （这是一个测试，作为一个学习记录）" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2025/11/25/Frist_BE/" data-id="cuidM5fBTTBYW5UobolMFTy0K" data-title="【DAY1】从零搭建：我的第一个 Linux C++ 公网聊天室 （这是一个测试，作为一个学习记录）" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
